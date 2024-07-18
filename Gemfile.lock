@@ -66,6 +66,8 @@ GEM
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
+    base64 (0.2.0)
+    bigdecimal (3.1.8)
     bootsnap (1.18.3)
       msgpack (~> 1.2)
     builder (3.3.0)
@@ -97,6 +99,7 @@ GEM
     mini_mime (1.1.5)
     minitest (5.24.1)
     msgpack (1.7.2)
+    mutex_m (0.2.0)
     net-imap (0.4.14)
       date
       net-protocol
@@ -167,8 +170,11 @@ PLATFORMS
   x64-mingw-ucrt
 
 DEPENDENCIES
+  base64
+  bigdecimal
   bootsnap
   debug
+  mutex_m
   puma (~> 5.0)
   rails (~> 7.0.8, >= 7.0.8.4)
   sqlite3 (~> 1.4)

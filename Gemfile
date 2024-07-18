@@ -46,3 +46,7 @@ group :development do
   # gem "spring"
 end
 
+
+gem 'base64'
+gem 'bigdecimal'
+gem 'mutex_m'
