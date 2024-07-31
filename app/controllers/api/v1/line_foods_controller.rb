@@ -1,7 +1,7 @@
 module Api
   module V1
     class LineFoodsController < ApplicationController
-      before_action :set_food, only: %i[create, replace]
+      before_action :set_food, only: %i[create replace]
 
       def index
         line_foods = LineFood.active
@@ -51,7 +51,6 @@ module Api
           render json: {}, status: :internal_server_error
         end
       end
-
 
       private
 
