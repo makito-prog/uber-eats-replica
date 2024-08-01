@@ -1,16 +1,11 @@
 import { COLORS } from '../style_constants';
 import LocalMallIcon from '@mui/icons-material/LocalMall';
 import { Link, useNavigate } from "react-router-dom";
-
 import { NewOrderConfirmDialog } from '../components/NewOrderConfirmDialog';
-
 import { postLineFoods, replaceLineFoods } from '../apis/line_foods';
-
 import { HTTP_STATUS_CODE } from '../constants';
-
 import React, { Fragment, useEffect, useReducer, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
 import { FoodWrapper } from '../components/FoodWrapper';
 import Skeleton from '@mui/material/Skeleton';
 
@@ -33,39 +28,47 @@ import { REQUEST_STATE } from '../constants';
 import styled from 'styled-components';
 import { FoodOrderDialog } from '../components/FoodOrderDialog';
 
-const HeaderWrapper = styled.div`
+const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
-  padding: 8px 32px;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: ${COLORS.HEADER_BACKGROUND};
 `;
 
 const BagIconWrapper = styled.div`
-  padding-top: 24px;
+  position: relative;
 `;
 
 const ColoredBagIcon = styled(LocalMallIcon)`
   color: ${COLORS.MAIN};
+  font-size: 36px;
 `;
 
 const MainLogoImage = styled.img`
-  height: 90px;
-`
+  height: 80px;
+`;
 
 const FoodsList = styled.div`
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 50px;
+  gap: 24px;
+  padding: 40px 16px;
+  background-color: ${COLORS.BACKGROUND};
 `;
 
 const ItemWrapper = styled.div`
-  margin: 16px;
+  width: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: ${COLORS.WHITE};
 `;
 
 export const Foods = () => {
   const { restaurantsId } = useParams();
   const navigate = useNavigate();
-
   const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
 
   const initialState = {
@@ -78,26 +81,22 @@ export const Foods = () => {
   };
   const [state, setState] = useState(initialState);
 
-
-
   useEffect(() => {
     dispatch({ type: foodsActionTyps.FETCHING });
-    fetchFoods(restaurantsId)
-      .then((data) => {
-        dispatch({
-          type: foodsActionTyps.FETCH_SUCCESS,
-          payload: {
-            foods: data.foods
-          }
-        });
-      })
-  }, [])
+    fetchFoods(restaurantsId).then((data) => {
+      dispatch({
+        type: foodsActionTyps.FETCH_SUCCESS,
+        payload: { foods: data.foods },
+      });
+    });
+  }, [restaurantsId]);
 
   const submitOrder = () => {
     postLineFoods({
       foodId: state.selectedFood.id,
       count: state.selectedFoodCount,
-    }).then(() => navigate('/orders'))
+    })
+      .then(() => navigate('/orders'))
       .catch((e) => {
         if (e.response.status === HTTP_STATUS_CODE.NOT_ACCEPTABLE) {
           setState({
@@ -106,19 +105,19 @@ export const Foods = () => {
             isOpenNewOrderDialog: true,
             existingResutaurautName: e.response.data.existing_restaurant,
             newResutaurautName: e.response.data.new_restaurant,
-          })
+          });
         } else {
           throw e;
         }
-      })
+      });
   };
 
   const replaceOrder = () => {
     replaceLineFoods({
       foodId: state.selectedFood.id,
       count: state.selectedFoodCount,
-    }).then(() => navigate('/orders'))
-  }
+    }).then(() => navigate('/orders'));
+  };
 
   return (
     <Fragment>
@@ -128,73 +127,76 @@ export const Foods = () => {
         </Link>
         <BagIconWrapper>
           <Link to="/orders">
-            <ColoredBagIcon fontSize="large" />
+            <ColoredBagIcon />
           </Link>
         </BagIconWrapper>
       </HeaderWrapper>
       <FoodsList>
-        {
-          foodsState.fetchState === REQUEST_STATE.LOADING ?
-            <Fragment>
-              {
-                [...Array(12).keys()].map(i =>
-                  <ItemWrapper key={i}>
-                    <Skeleton key={i} variant="rect" width={450} height={180} />
-                  </ItemWrapper>
-                )
-              }
-            </Fragment>
-          :
-            foodsState.foodsList.map(food =>
-              <ItemWrapper key={food.id}>
-                <FoodWrapper
-                  food={food}
-                  onClickFoodWrapper={
-                    (food) => setState({
-                      ...state,
-                      selectedFood: food,
-                      isOpenOrderDialog: true,
-                    })
-                  }
-                  imageUrl={FoodImage}
-                />
+        {foodsState.fetchState === REQUEST_STATE.LOADING ? (
+          <Fragment>
+            {[...Array(12).keys()].map((i) => (
+              <ItemWrapper key={i}>
+                <Skeleton variant="rect" width={300} height={180} />
               </ItemWrapper>
-            )
-        }
+            ))}
+          </Fragment>
+        ) : (
+          foodsState.foodsList.map((food) => (
+            <ItemWrapper key={food.id}>
+              <FoodWrapper
+                food={food}
+                onClickFoodWrapper={() =>
+                  setState({
+                    ...state,
+                    selectedFood: food,
+                    isOpenOrderDialog: true,
+                  })
+                }
+                imageUrl={FoodImage}
+              />
+            </ItemWrapper>
+          ))
+        )}
       </FoodsList>
-      {
-        state.isOpenOrderDialog &&
+      {state.isOpenOrderDialog && (
         <FoodOrderDialog
           isOpen={state.isOpenOrderDialog}
           food={state.selectedFood}
           countNumber={state.selectedFoodCount}
-          onClickCountUp={() => setState({
-            ...state,
-            selectedFoodCount: state.selectedFoodCount + 1,
-          })}
-          onClickCountDown={() => setState({
-            ...state,
-            selectedFoodCount: state.selectedFoodCount - 1,
-          })}
+          onClickCountUp={() =>
+            setState({
+              ...state,
+              selectedFoodCount: state.selectedFoodCount + 1,
+            })
+          }
+          onClickCountDown={() =>
+            setState({
+              ...state,
+              selectedFoodCount: state.selectedFoodCount - 1,
+            })
+          }
           onClickOrder={() => submitOrder()}
-          onClose={() => setState({
-            ...state,
-            isOpenOrderDialog: false,
-            selectedFood: null,
-            selectedFoodCount: 1,
-          })}
+          onClose={() =>
+            setState({
+              ...state,
+              isOpenOrderDialog: false,
+              selectedFood: null,
+              selectedFoodCount: 1,
+            })
+          }
         />
-      }
-      {
-        state.isOpenNewOrderDialog &&
+      )}
+      {state.isOpenNewOrderDialog && (
         <NewOrderConfirmDialog
           isOpen={state.isOpenNewOrderDialog}
-          onClose={() => setState({ ...state, isOpenNewOrderDialog: false })}
+          onClose={() =>
+            setState({ ...state, isOpenNewOrderDialog: false })
+          }
           existingResutaurautName={state.existingResutaurautName}
           newResutaurautName={state.newResutaurautName}
           onClickSubmit={() => replaceOrder()}
         />
-      }
+      )}
     </Fragment>
-  )
-}
+  );
+};
